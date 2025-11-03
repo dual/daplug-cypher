@@ -77,3 +77,24 @@ def test_serialize_records_relationships() -> None:
     payload = result["Start"][0]
     assert payload["name"] == "s"
     assert payload["LINKS"]["name"] == "e"
+
+
+def test_serialize_records_with_path() -> None:
+    start = FakeNode(1, ["Start"], {"name": "s"})
+    end = FakeNode(2, ["End"], {"name": "e"})
+    relationship = FakeRelationship(start, end, "LINKS", {"weight": 1})
+    path = FakePath([start, end], [relationship])
+    record = FakeRecord([path])
+
+    result = serialization.serialize_records([record], label="Start")
+    assert result["Start"][0]["LINKS"]["name"] == "e"
+
+
+def test_serialize_records_deduplicates_relationships() -> None:
+    start = FakeNode(1, ["Start"], {"name": "s"})
+    end = FakeNode(2, ["End"], {"name": "e"})
+    relationship = FakeRelationship(start, end, "LINKS", {"weight": 1})
+    record = FakeRecord([start, end, relationship, relationship])
+
+    result = serialization.serialize_records([record], label="Start")
+    assert len(result["Start"]) == 1

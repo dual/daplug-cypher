@@ -17,9 +17,13 @@ def test_convert_placeholders_handles_nested_structures() -> None:
             "inner": ["3", {"leaf": "4"}],
         },
         "list": ["5", "value"],
+        "mixed": ["0", None, {"deep": "-7"}],
     }
     result = convert_placeholders(placeholder)
     assert result["outer"]["inner"][0] == 3
     assert result["outer"]["inner"][1]["leaf"] == 4
     assert result["list"][0] == 5
     assert result["list"][1] == "value"
+    assert result["mixed"][0] == 0
+    assert result["mixed"][1] is None
+    assert result["mixed"][2]["deep"] == -7

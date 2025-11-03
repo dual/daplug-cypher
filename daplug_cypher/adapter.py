@@ -185,11 +185,16 @@ class CypherAdapter(BaseAdapter):
         if delete_identifier is None:
             raise ValueError("delete_identifier is required")
 
-        read_result = self.__get_before_delete(node_label, identifier, delete_identifier, **kwargs)
+        helper_kwargs = dict(kwargs)
+        helper_kwargs.pop("delete_identifier", None)
+        helper_kwargs.pop("node", None)
+        helper_kwargs.pop("label", None)
+        helper_kwargs.pop("identifier", None)
+        read_result = self.__get_before_delete(node_label, identifier, delete_identifier, **helper_kwargs)
         if not read_result:
             return {}
 
-        delete_query = kwargs.get("delete_query")
+        delete_query = helper_kwargs.get("delete_query")
         self.__perform_delete(node_label, identifier, delete_identifier, delete_query)
         self.publish("delete", read_result, **kwargs)
         return read_result
