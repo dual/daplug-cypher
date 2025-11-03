@@ -1,0 +1,34 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = "3.9.17"
+
+[packages]
+boto3 = "*"
+jsonref = "*"
+pyyaml = "*"
+simplejson = "*"
+neo4j = "*"
+
+[dev-packages]
+mypy = "*"
+lxml = "*"
+pylint = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-html = "*"
+pylint-json2html = "*"
+
+[scripts]
+lint = "pylint --fail-under 10 daplug_cypher"
+test = "pytest tests/unit"
+test_ci = "pytest -m 'neo4j or neptune'"
+test_neo4j = "pytest -m neo4j"
+test_neptune = "pytest -m neptune"
+integrations = "bash -c 'pipenv run test_neo4j && pipenv run test_neptune'"
+coverage = "coverage run --source daplug_cypher -m pytest --junitxml ./coverage/reports/junit.xml --cov=daplug_cypher --cov-report xml:./coverage/reports/cov.xml --html=./coverage/reports/index.html --self-contained-html --cov-report html:./coverage/pretty -p no:warnings -o log_cli=true"
+mypy-report = "mypy --html-report ./coverage/typing daplug_cypher"
+mypy = "mypy daplug_cypher"
