@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "dual-github-personal-mac",
+        "projectKey": "dual_daplug-cypher"
+    }
+}

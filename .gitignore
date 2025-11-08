@@ -150,3 +150,6 @@ __marimo__/
 
 # agents stuff
 .agents/plans/
+
+# Mac
+.DS_Store
