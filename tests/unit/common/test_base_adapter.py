@@ -9,16 +9,10 @@ from daplug_cypher.common.base_adapter import BaseAdapter
 
 
 def _build_adapter(**kwargs: Any) -> BaseAdapter:
-    return BaseAdapter(
-        identifier="id",
-        idempotence_key="version",
-        author_identifier="author",
-        sns_arn="arn",
-        **kwargs,
-    )
+    return BaseAdapter(sns_arn="arn", **kwargs)
 
 
-def test_publish_invokes_publisher_with_formatted_attributes() -> None:
+def test_publish_merges_adapter_and_call_attributes() -> None:
     adapter = _build_adapter(sns_attributes={"custom": "x"})
     payload = {"value": 1}
     with mock.patch("daplug_cypher.common.base_adapter.publisher.publish") as publish_mock:
@@ -34,7 +28,20 @@ def test_publish_invokes_publisher_with_formatted_attributes() -> None:
     assert attributes["call"]["StringValue"] == "y"
 
 
-def test_create_format_attributes_omits_none_values() -> None:
-    adapter = _build_adapter(sns_default_attributes=False)
-    attributes = adapter.create_format_attibutes("update", {"key": None})
-    assert "key" not in attributes
+def test_publish_call_attributes_override_defaults() -> None:
+    adapter = _build_adapter(sns_attributes={"source": "default"})
+    with mock.patch("daplug_cypher.common.base_adapter.publisher.publish") as publish_mock:
+        adapter.publish("update", {"value": 2}, sns_attributes={"source": "call"})
+
+    attributes = publish_mock.call_args.kwargs["attributes"]
+    assert attributes["source"]["StringValue"] == "call"
+
+
+def test_create_format_attributes_skip_none_and_infer_types() -> None:
+    adapter = _build_adapter()
+    attributes = adapter.create_format_attributes("delete", {"keep": "x", "skip": None, "count": 3})
+
+    assert "skip" not in attributes
+    assert attributes["operation"]["StringValue"] == "delete"
+    assert attributes["keep"]["DataType"] == "String"
+    assert attributes["count"]["DataType"] == "Number"

@@ -217,7 +217,7 @@ graph = adapter(
 graph.delete(delete_identifier="abc123", node="Customer", identifier="customer_id")
 ```
 
-Each write publishes an event with merged attributes (`operation`, default adapter attributes, custom attributes, and call-specific overrides).
+Each CRUD helper automatically publishes an SNS message when `sns_arn` is set. Provide default metadata through `sns_attributes` at adapter construction (for example `{"service": "crm"}`) and add request-specific context per call: `graph.create(..., sns_attributes={"source": "api"})`. Per-call keys override adapter defaults, `operation` is injected automatically, and `None` values are stripped so events remain clean. Non-string values are sent using the appropriate SNS `Number` type.
 
 ## 🧪 Testing
 
