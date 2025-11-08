@@ -16,7 +16,7 @@ setup(
     url="https://github.com/dual/daplug-cypher",
     author="Paul Cruse III",
     author_email="paulcruse3@gmail.com",
-    description="A Cypher and Neptune graph normalization layer inspired by Trellis data adapters.",
+    description="A Neo4j and Neptune graph normalization layer using the adapter pattern.",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",
     packages=find_packages(),
@@ -24,9 +24,9 @@ setup(
     install_requires=[
         "boto3>=1.34",
         "jsonref>=0.2",
+        "neo4j>=5.7.0",
         "PyYAML>=5.3",
-        "simplejson>=3.17",
-        "cypher>=5.13",
+        "simplejson>=3.17"
     ],
     keywords=[
         "cypher",
