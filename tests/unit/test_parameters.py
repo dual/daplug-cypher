@@ -1,6 +1,7 @@
 """Unit tests for parameter utilities."""
 
 from daplug_cypher.cypher.parameters import convert_placeholders
+from daplug_cypher.cypher import parameters as parameters_module
 
 
 def test_convert_placeholders_converts_numeric_strings() -> None:
@@ -27,3 +28,13 @@ def test_convert_placeholders_handles_nested_structures() -> None:
     assert result["mixed"][0] == 0
     assert result["mixed"][1] is None
     assert result["mixed"][2]["deep"] == -7
+
+
+def test_convert_placeholders_handles_int_conversion_fail(monkeypatch) -> None:
+    def broken_int(_value: str) -> int:
+        raise ValueError
+
+    monkeypatch.setattr(parameters_module, "int", broken_int, raising=False)
+    placeholder = {"value": "10"}
+    result = convert_placeholders(placeholder)
+    assert result["value"] == "10"

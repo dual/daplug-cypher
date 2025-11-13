@@ -99,3 +99,38 @@ def test_serialize_records_deduplicates_relationships() -> None:
 
     result = serialization.serialize_records([record], label="Start")
     assert len(result["Start"]) == 1
+
+
+def test_serialize_records_returns_raw_when_disabled() -> None:
+    assert serialization.serialize_records([[1, 2, 3]], label="Any", serialize=False) == [[1, 2, 3]]
+
+
+def test_serialize_records_defaults_label_when_missing() -> None:
+    node = FakeNode(1, ["Example"], {"value": 1})
+    record = FakeRecord([node])
+    result = serialization.serialize_records([record], label=None)
+    assert result["node"][0]["value"] == 1
+
+
+def test_connect_nodes_skips_edges_for_unknown_nodes() -> None:
+    connections = serialization._connect_nodes({}, [{"start": 1, "end": 2, "type": "LINKS", "properties": {}}])
+    assert connections == {}
+
+
+def test_normalize_properties_handles_search_lists() -> None:
+    node = FakeNode(1, ["Example"], {"value": 1})
+    result = serialization._normalize_properties([[ [node] ]], label="Example", search=True)
+    assert result["Example"][0]["value"] == 1
+
+
+def test_normalize_numbers_supports_to_native() -> None:
+    class Wrapper:
+        def __init__(self, value: int) -> None:
+            self._value = value
+
+        def to_native(self) -> int:  # pragma: no cover - simple shim
+            return self._value
+
+    payload = serialization._normalize_numbers({"wrapped": Wrapper(5), "plain": object()})
+    assert payload["wrapped"] == 5
+    assert isinstance(payload["plain"], object)

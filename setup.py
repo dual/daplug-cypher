@@ -22,11 +22,20 @@ setup(
     packages=find_packages(),
     python_requires=">=3.9",
     install_requires=[
-        "boto3>=1.34",
-        "jsonref>=0.2",
-        "neo4j>=5.7.0",
-        "PyYAML>=5.3",
-        "simplejson>=3.17"
+        "boto3==1.40.72; python_version >= '3.9'",
+        "botocore==1.40.72; python_version >= '3.9'", 
+        "daplug-core==1.0.0b5; python_version >= '3.9'", 
+        "jmespath==1.0.1; python_version >= '3.7'", 
+        "jsonref==1.1.0; python_version >= '3.7'",
+         "neo4j==4.4.13; python_version >= '3.6'", 
+         "python-dateutil==2.9.0.post0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'", 
+         'pytz==2025.2', 
+         "pyyaml==6.0.3; python_version >= '3.8'", 
+         "s3transfer==0.14.0; python_version >= '3.9'", 
+         "simplejson==3.20.2; python_version >= '2.5' and python_version not in '3.0, 3.1, 3.2'", 
+         "six==1.17.0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2'", 
+         "typing-extensions==4.15.0; python_version >= '3.9'", 
+         "urllib3==1.26.20; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'"
     ],
     keywords=[
         "cypher",

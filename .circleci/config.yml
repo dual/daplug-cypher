@@ -50,12 +50,15 @@ commands:
             - run: pipenv run pylint-json2html ./coverage/lint/pylint_report.json -o ./coverage/lint/pylint_report.html || exit 0
             - store_artifacts:
                 path: ./coverage/lint
-    mypy-test:
+    typecheck-test:
         steps:
-            - run: pipenv run mypy
-            - run: pipenv run mypy-report
+            - run: pipenv run typecheck
+            - run: pipenv run typecheck-report
             - store_artifacts:
                 path: ./coverage/typing
+    sync-packaging:
+        steps:
+            - run: pipenv run setup-sync
     pypi-setup:
         steps:
             - run: echo -e "[pypi]" >> ~/.pypirc
@@ -96,7 +99,7 @@ jobs:
             - attach_workspace:
                 at: ~/project
             - setup-artifacts
-            - mypy-test
+            - typecheck-test
     test-neo4j:
         docker:
             - image: cimg/python:3.9.17
@@ -161,6 +164,7 @@ jobs:
                   method: full
             - python/install-packages:
                 pkg-manager: pipenv
+            - sync-packaging
             - pypi-setup
             - pypi-publish
 workflows:

@@ -1,12 +1,18 @@
 """Helpers for transforming Cypher records into JSON-compatible data."""
 
 from typing import Any, Dict, Iterable, List, Optional, cast
+from typing_extensions import Unpack
 
 from neo4j.graph import Node, Path, Relationship
 
+from daplug_cypher.types.options import SerializeRecordsOptions
 
-def serialize_records(records: Iterable[Any], *, label: Optional[str], serialize: bool = True, search: bool = False) -> Any:
+
+def serialize_records(records: Iterable[Any], **options: Unpack[SerializeRecordsOptions]) -> Any:
     """Serialize Neo4j result records into JSON-compatible structures."""
+    label = options.get("label")
+    serialize = options.get("serialize", True)
+    search = options.get("search", False)
     if not serialize:
         return list(records)
 
