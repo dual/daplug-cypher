@@ -164,6 +164,7 @@ jobs:
                   method: full
             - python/install-packages:
                 pkg-manager: pipenv
+                args: '--dev'
             - sync-packaging
             - pypi-setup
             - pypi-publish
