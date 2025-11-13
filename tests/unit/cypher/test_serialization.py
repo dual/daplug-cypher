@@ -6,7 +6,8 @@ from typing import Any, Iterable, List
 
 import pytest
 
-from daplug_cypher.cypher import serialization
+from daplug_cypher.cypher.serialization import serialize_records
+import daplug_cypher.cypher.serialization as serialization
 
 
 class FakeNode:

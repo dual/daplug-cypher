@@ -1,5 +1,3 @@
-"""Cypher adapter implementing graph CRUD operations with Trellis-style patterns."""
-
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -7,13 +5,14 @@ from typing import Any, Dict, List, Optional
 from neo4j import GraphDatabase
 from neo4j import Driver, Session, Transaction
 
-from daplug_cypher.common import BaseAdapter, map_to_schema, merge
+from daplug_core.schema_mapper import map_to_schema
+from daplug_core.dict_merger import merge
+from daplug_core.base_adapter import BaseAdapter
 from daplug_cypher.cypher.parameters import convert_placeholders
 from daplug_cypher.cypher.serialization import serialize_records
 
 
 class CypherAdapter(BaseAdapter):
-    """Graph adapter coordinating schema normalization, sessions, and publishing."""
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -30,7 +29,6 @@ class CypherAdapter(BaseAdapter):
 
     # ---- Connection lifecycle -------------------------------------------------
     def open(self) -> None:
-        """Establish a Cypher session using Neo4j driver configuration."""
         if self._session:
             return
 
@@ -49,7 +47,6 @@ class CypherAdapter(BaseAdapter):
         self._session = session
 
     def close(self) -> None:
-        """Close any active driver/session."""
         if self._session:
             self._session.close()
             self._session = None
@@ -58,18 +55,15 @@ class CypherAdapter(BaseAdapter):
             self._driver = None
 
     def __auto_open(self) -> None:
-        """Open a session when auto-connect is enabled."""
         if self.auto_connect:
             self.open()
 
     def __auto_close(self) -> None:
-        """Close a session when auto-connect is enabled."""
         if self.auto_connect:
             self.close()
 
     # ---- CRUD surface ---------------------------------------------------------
     def create(self, **kwargs: Any) -> Dict[str, Any]:
-        """Insert a node using schema-normalized payloads."""
         node_label = kwargs.get("node") or kwargs.get("label")
         if not node_label:
             raise ValueError("node label must be provided for create operations")
@@ -86,11 +80,10 @@ class CypherAdapter(BaseAdapter):
         finally:
             self.__auto_close()
 
-        self.publish("create", payload, **kwargs)
+        self.__publish_with_operation("create", payload, **kwargs)
         return payload
 
     def read(self, **kwargs: Any) -> Any:
-        """Dispatch to query/match readers and return serialized content."""
         params = dict(kwargs)
         serialize = params.pop("serialize", True)
         search = params.pop("search", False)
@@ -101,7 +94,6 @@ class CypherAdapter(BaseAdapter):
         return records
 
     def query(self, **kwargs: Any) -> Any:
-        """Execute arbitrary parameterized queries."""
         if "query" not in kwargs:
             raise ValueError("query text is required")
         query_text = kwargs["query"]
@@ -118,7 +110,6 @@ class CypherAdapter(BaseAdapter):
             self.__auto_close()
 
     def update(self, **kwargs: Any) -> Dict[str, Any]:
-        """Perform optimistic updates leveraging merge + schema mapping."""
         node_label = kwargs.get("node") or kwargs.get("label")
         if not node_label:
             raise ValueError("node label must be provided for update operations")
@@ -153,7 +144,8 @@ class CypherAdapter(BaseAdapter):
         merged = self.__merge_payload(original_properties, kwargs["data"], **kwargs)
         normalized = self.__map_with_schema(merged)
 
-        update_query = kwargs.get("update_query") or self.__default_update_query(node_label, identifier, idempotence_key)
+        update_query = kwargs.get("update_query") or self.__default_update_query(
+            node_label, identifier, idempotence_key)
         update_params = {
             "id": normalized[identifier],
             "version": original_version,
@@ -161,20 +153,22 @@ class CypherAdapter(BaseAdapter):
         }
         update_params = self.__clean_placeholders(update_params)
 
+        def _run_update(tx: Transaction) -> List[Any]:
+            result = tx.run(update_query, **update_params)
+            return list(result)
+
         self.__auto_open()
         try:
-            result = self.__execute_write(lambda tx: tx.run(update_query, **update_params))
-            records = list(result)
+            records = self.__execute_write(_run_update)
             if not records:
                 raise ValueError("ATOMIC ERROR: No records updated; version may have changed")
         finally:
             self.__auto_close()
 
-        self.publish("update", normalized, **kwargs)
+        self.__publish_with_operation("update", normalized, **kwargs)
         return normalized
 
     def delete(self, **kwargs: Any) -> Dict[str, Any]:
-        """Remove node(s) and publish deletion events."""
         node_label = kwargs.get("node") or kwargs.get("label")
         if not node_label:
             raise ValueError("node label must be provided for delete operations")
@@ -196,11 +190,10 @@ class CypherAdapter(BaseAdapter):
 
         delete_query = helper_kwargs.get("delete_query")
         self.__perform_delete(node_label, identifier, delete_identifier, delete_query)
-        self.publish("delete", read_result, **kwargs)
+        self.__publish_with_operation("delete", read_result, **kwargs)
         return read_result
 
     def create_relationship(self, **kwargs: Any) -> Any:
-        """Create relationships with Cypher safeguards."""
         query_text = kwargs.get("query")
         if not query_text:
             raise ValueError("query is required to create relationships")
@@ -212,13 +205,12 @@ class CypherAdapter(BaseAdapter):
         try:
             result = self.__run_write(query_text, parameters)
             result_list = list(result)
-            self.publish("create", result_list, **kwargs)  # type: ignore[arg-type]
+            self.__publish_with_operation("create", result_list, **kwargs)
             return result_list
         finally:
             self.__auto_close()
 
     def delete_relationship(self, **kwargs: Any) -> Any:
-        """Delete relationships while enforcing integrity constraints."""
         query_text = kwargs.get("query")
         if not query_text:
             raise ValueError("query is required to delete relationships")
@@ -231,47 +223,47 @@ class CypherAdapter(BaseAdapter):
         try:
             result = self.__run_write(query_text, parameters)
             result_list = list(result)
-            self.publish("delete", result_list, **kwargs)  # type: ignore[arg-type]
+            self.__publish_with_operation("delete", result_list, **kwargs)
             return result_list
         finally:
             self.__auto_close()
 
     # ---- Support utilities ----------------------------------------------------
     def __map_with_schema(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Normalize payloads using shared schema helpers."""
         if self.schema_file and self.schema_name:
             return map_to_schema(data, self.schema_file, self.schema_name)
         return dict(data)
 
+    def __publish_with_operation(self, operation: str, payload: Any, **kwargs: Any) -> None:
+        publish_kwargs = dict(kwargs)
+        merged_attributes = dict(publish_kwargs.get("sns_attributes", {}))
+        merged_attributes["operation"] = operation
+        publish_kwargs["sns_attributes"] = merged_attributes
+        self.publish(payload, **publish_kwargs)
+
     def __merge_payload(self, original: Dict[str, Any], incoming: Dict[str, Any], **kwargs: Any) -> Dict[str, Any]:
-        """Reuse daplug-ddb merge semantics for optimistic updates."""
         return merge(original, incoming, **kwargs)
 
-    def __serialize(
-        self,
-        records: Any,
-        *,
-        node_label: Optional[str],
-        serialize: bool = True,
-        search: bool = False,
-    ) -> Any:
-        """Turn Cypher driver records into JSON-ish payloads."""
+    def __serialize(self, records: Any, *, node_label: Optional[str], serialize: bool = True, search: bool = False,) -> Any:
         return serialize_records(records, label=node_label, serialize=serialize, search=search)
 
     def __clean_placeholders(self, placeholder: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Convert user-supplied parameters into cypher-friendly values."""
         if placeholder is None:
             return {}
         return convert_placeholders(placeholder)
 
     def __resolve_bolt_config(self) -> Dict[str, Any]:
-        """Choose the appropriate bolt configuration (Neptune overrides)."""
         return self.neptune or self.bolt
 
     def __execute_write(self, callback) -> Any:
         if not self._session:
             raise ValueError("session has not been opened")
-        return self._session.execute_write(callback)
+        session = self._session
+        if hasattr(session, "execute_write"):
+            return session.execute_write(callback)
+        if hasattr(session, "write_transaction"):
+            return session.write_transaction(callback)
+        raise RuntimeError("Unsupported neo4j session: missing write helpers")
 
     def __run_read(self, query: str, parameters: Dict[str, Any]) -> Any:
         if not self._session:
@@ -293,15 +285,7 @@ class CypherAdapter(BaseAdapter):
             f"SET n = $placeholder RETURN n"
         )
 
-    def __match(
-        self,
-        query: str,
-        placeholder: Optional[Dict[str, Any]],
-        *,
-        node_label: Optional[str],
-        serialize: bool,
-        search: bool,
-    ) -> Any:
+    def __match(self, query: str, placeholder: Optional[Dict[str, Any]], *, node_label: Optional[str], serialize: bool, search: bool,) -> Any:
         self.__auto_open()
         try:
             parameters = self.__clean_placeholders(placeholder)

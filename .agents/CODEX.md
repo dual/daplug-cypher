@@ -1,6 +1,6 @@
 # CODEX Notes
 
-- **Scope**: `daplug_cypher.common.BaseAdapter` now treats adapter-level `sns_attributes` as defaults that merge with per-call overrides. `operation` is injected automatically; `None` values are stripped and numbers are typed correctly for SNS message attributes.
+- **Scope**: `daplug_core.BaseAdapter` now treats adapter-level `sns_attributes` as defaults that merge with per-call overrides. `operation` is injected automatically; `None` values are stripped and numbers are typed correctly for SNS message attributes.
 - **Tests**: Critical coverage lives in `tests/unit/common/test_base_adapter.py`. Run `pipenv run pytest tests/unit/common/test_base_adapter.py` for focused checks or `pipenv run pytest` for the full suite (integration tests skip unless Bolt endpoints exist).
 - **Key Modules**:
   - `daplug_cypher/common/base_adapter.py` – SNS helper logic.

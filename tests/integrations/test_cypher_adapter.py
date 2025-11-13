@@ -1,5 +1,3 @@
-"""Integration tests validating CypherAdapter against Neo4j and Neptune flows."""
-
 from __future__ import annotations
 
 import uuid
