@@ -1,6 +1,4 @@
-"""Helpers for transforming Cypher records into JSON-compatible data."""
-
-from typing import Any, Dict, Iterable, List, Optional, cast
+from typing import Any, Dict, Iterable, List, cast
 from typing_extensions import Unpack
 
 from neo4j.graph import Node, Path, Relationship
