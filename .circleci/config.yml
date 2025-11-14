@@ -72,27 +72,26 @@ commands:
             - run: python3 -m twine upload dist/*
     python-build-dist:
         steps:
-            - run:
-                name: Build distribution artifacts
-                command: |
-                    set -euo pipefail
-                    pipenv run python -m pip install --upgrade pip build
-                    pipenv run python -m build
-                    pipenv lock --requirements --dev > dev-requirements.txt
-    python-packaged-tests:
+            - run: pipenv run python -m pip install --upgrade pip build
+            - run: pipenv run python -m build
+            - run: pipenv requirements --dev > dev-requirements.txt
+    python-test-dist:
         steps:
+            - run: python -m venv /tmp/package-smoke
+            - run: /tmp/package-smoke/bin/pip install --upgrade pip
+            - run: /tmp/package-smoke/bin/pip install -r dev-requirements.txt
+            - run: /tmp/package-smoke/bin/pip install dist/*.whl
+            - run: /tmp/package-smoke/bin/python -m pytest ~/project/tests/unit
             - run:
-                name: Install built artifacts into a clean virtualenv and run tests
-                command: |
-                    set -euo pipefail
-                    python -m venv /tmp/package-smoke
-                    source /tmp/package-smoke/bin/activate
-                    python -m pip install --upgrade pip
-                    python -m pip install -r dev-requirements.txt
-                    ARTIFACT=$(ls dist/*.whl | head -n 1)
-                    python -m pip install "$ARTIFACT"
-                    cd /tmp
-                    python -m pytest ~/project/tests/unit
+                environment:
+                    NEO4J_BOLT_URL: bolt://localhost:7687
+                    NEO4J_USER: neo4j
+                    NEO4J_PASSWORD: password
+                    NEPTUNE_BOLT_URL: bolt://localhost:7687
+                    NEPTUNE_USER: neo4j
+                    NEPTUNE_PASSWORD: password
+                working_directory: /tmp
+                command: /tmp/package-smoke/bin/python -m pytest ~/project/tests -m "neo4j or neptune"
 jobs:
     install-build:
         docker:
@@ -194,11 +193,14 @@ jobs:
     package-smoke-test:
         docker:
             - image: cimg/python:3.9.17
+            - image: neo4j:5.18
+              environment:
+                  NEO4J_AUTH: neo4j/password
         steps:
             - attach_workspace:
                 at: ~/project
             - python-build-dist
-            - python-packaged-tests
+            - python-test-dist
 workflows:
     install-build-publish-workflow:
         jobs:
