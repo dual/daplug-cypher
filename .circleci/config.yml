@@ -95,7 +95,7 @@ commands:
 jobs:
     install-build:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
         steps:
             - checkout:
                   method: full
@@ -108,7 +108,7 @@ jobs:
                     - ./*
     lint:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
         steps:
             - attach_workspace:
                 at: ~/project
@@ -116,7 +116,7 @@ jobs:
             - lint-code
     type-check:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
         steps:
             - attach_workspace:
                 at: ~/project
@@ -124,7 +124,7 @@ jobs:
             - typecheck-test
     test-neo4j:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
             - image: neo4j:5.18
               environment:
                   NEO4J_AUTH: neo4j/password
@@ -135,7 +135,7 @@ jobs:
             - python-neo4j-tests
     test-neptune:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
             - image: neo4j:5.18
               environment:
                   NEO4J_AUTH: neo4j/password
@@ -157,7 +157,7 @@ jobs:
             - python-neptune-tests
     test-all:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
             - image: neo4j:5.18
               environment:
                   NEO4J_AUTH: neo4j/password
@@ -180,7 +180,7 @@ jobs:
             - sonarcloud/scan
     install-build-publish:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
         steps:
             - checkout:
                   method: full
@@ -192,7 +192,7 @@ jobs:
             - pypi-publish
     package-smoke-test:
         docker:
-            - image: cimg/python:3.9.17
+            - image: cimg/python:3.10.14
             - image: neo4j:5.18
               environment:
                   NEO4J_AUTH: neo4j/password

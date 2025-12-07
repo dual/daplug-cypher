@@ -3,7 +3,7 @@
 > **Schema-Driven Cypher Normalization & Event Publishing for Python**
 
 [![CircleCI](https://circleci.com/gh/dual/daplug-cypher.svg?style=shield)](https://circleci.com/gh/dual/daplug-cypher)
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-apache%202.0-blue)](LICENSE)
 [![Contributions](https://img.shields.io/badge/contributions-welcome-blue)](https://github.com/paulcruse3/daplug-cypher/issues)
 [![PyPI package](https://img.shields.io/pypi/v/daplug-cypher?color=blue&label=pypi%20package)](https://pypi.org/project/daplug-cypher/)
@@ -257,7 +257,7 @@ Environment variables to override defaults:
 
 ### Prerequisites
 
-- Python **3.9+**
+- Python **3.10+**
 - [Pipenv](https://pipenv.pypa.io/)
 - Docker (for running Neo4j or LocalStack locally)
 
