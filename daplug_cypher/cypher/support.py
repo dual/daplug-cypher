@@ -39,6 +39,10 @@ class SupportUtilities:
         fifo_dup = source.get("fifo_duplication_id")
         if fifo_dup is not None:
             options["fifo_duplication_id"] = fifo_dup
+        if "publish" in source:
+            options["publish"] = bool(source["publish"])
+        if "publish_data" in source:
+            options["publish_data"] = source["publish_data"]
         return options
 
     def extract_merge_options(self, source: Mapping[str, Any]) -> MergeOptions:
@@ -67,6 +71,10 @@ class SupportUtilities:
             publish_kwargs["fifo_group_id"] = options.get("fifo_group_id")
         if options.get("fifo_duplication_id") is not None:
             publish_kwargs["fifo_duplication_id"] = options.get("fifo_duplication_id")
+        if "publish" in options:
+            publish_kwargs["publish"] = options["publish"]
+        if "publish_data" in options:
+            publish_kwargs["publish_data"] = options["publish_data"]
         adapter.publish(payload, **publish_kwargs)
 
     def merge_payload(self, original: Dict[str, Any], incoming: Dict[str, Any], **options: Unpack[MergeOptions]) -> Dict[str, Any]:

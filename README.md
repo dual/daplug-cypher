@@ -148,6 +148,33 @@ graph.delete_relationship(
 
 Each method mirrors the DynamoDB adapter API: provide per-call metadata, and the adapter handles schema normalization, optimistic locking, driver orchestration, and optional SNS fan-out.
 
+#### Per-call publish controls
+
+Every CRUD/relationship helper accepts two extra kwargs that flow through
+to `BaseAdapter.publish`:
+
+| Kwarg | Effect |
+| ----- | ------ |
+| `publish=False` | Skip the SNS publish for this call only (default `True`). |
+| `publish_data={...}` | Publish this payload to SNS instead of the node/edge that was written. |
+
+```python
+# write the node, don't notify
+graph.create(data=row, node="Customer", publish=False)
+
+# notify with a thinner event shape than what was stored
+graph.update(
+    data=row,
+    query="MATCH (c:Customer) WHERE c.customer_id = $id RETURN c",
+    placeholder={"id": row["customer_id"]},
+    original_idempotence_value=row["version"],
+    node="Customer",
+    identifier="customer_id",
+    idempotence_key="version",
+    publish_data={"id": row["customer_id"], "event": "updated"},
+)
+```
+
 ### Neo4j & Neptune Targets
 
 ```python

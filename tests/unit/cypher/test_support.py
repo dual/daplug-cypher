@@ -72,6 +72,33 @@ def test_publish_with_operation_invokes_adapter_publish() -> None:
     assert kwargs["sns_attributes"]["source"] == "test"
 
 
+def test_extract_publish_options_forwards_publish_and_publish_data() -> None:
+    adapter = DummyAdapter()
+    support = SupportUtilities(adapter)
+    options = support.extract_publish_options(
+        {"publish": False, "publish_data": {"event": "custom"}}
+    )
+    assert options["publish"] is False
+    assert options["publish_data"] == {"event": "custom"}
+
+
+def test_publish_with_operation_forwards_publish_false() -> None:
+    adapter = DummyAdapter()
+    support = SupportUtilities(adapter)
+    support.publish_with_operation("update", {"id": 1}, publish=False)
+    _, kwargs = adapter.published[0]
+    assert kwargs.get("publish") is False
+
+
+def test_publish_with_operation_forwards_publish_data() -> None:
+    adapter = DummyAdapter()
+    support = SupportUtilities(adapter)
+    override = {"event": "custom"}
+    support.publish_with_operation("delete", {"id": 1}, publish_data=override)
+    _, kwargs = adapter.published[0]
+    assert kwargs.get("publish_data") == override
+
+
 def test_extract_merge_options_honours_values() -> None:
     adapter = DummyAdapter()
     support = SupportUtilities(adapter)

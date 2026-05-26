@@ -20,6 +20,8 @@ class PublishOptions(TypedDict, total=False):
     sns_attributes: Dict[str, Any]
     fifo_group_id: Optional[str]
     fifo_duplication_id: Optional[str]
+    publish: bool
+    publish_data: Any
 
 
 class MergeOptions(TypedDict, total=False):
