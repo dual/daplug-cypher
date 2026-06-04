@@ -25,9 +25,9 @@ setup(
         "boto3>=1.43.23,<2; python_version >= '3.10'",
         "jsonref>=1.1.0,<2; python_version >= '3.7'",
         "pyyaml>=6.0.3,<7; python_version >= '3.8'",
-        "simplejson>=3.20.2,<4; python_version >= '2.5' and python_version not in '3.0, 3.1, 3.2'",
+        "simplejson>=4.1.1,<5; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7'",
         "neo4j>=4.4.13,<5; python_version >= '3.6'",
-        "daplug-core==1.0.0b8; python_version >= '3.10'",
+        "daplug-core==1.0.0b9; python_version >= '3.10'",
         "typing-extensions>=4.15.0,<5; python_version >= '3.9'",
     ],
     keywords=[
